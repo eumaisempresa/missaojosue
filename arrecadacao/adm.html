@@ -291,6 +291,7 @@
                     `;
                     corpo.innerHTML += rowHtml;
 
+                    // Cards mobile (mantido atualizado)
                     cards.innerHTML += `
                         <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 space-y-3">
                             <div class="flex justify-between items-start">
@@ -309,15 +310,160 @@
                         </div>
                     `;
                 });
-            } catch(e) {
-                console.error(e);
-                corpo.innerHTML = "<tr><td colspan='5' class='p-10 text-center text-red-400'>Erro ao carregar dados.</td></tr>";
-            }
+            } catch(e) { corpo.innerHTML = "<tr><td colspan='5' class='p-10 text-center text-red-500'>Erro ao carregar dados.</td></tr>"; }
         }
 
-        // Funções restantes (manter as originais completas)
-        // Adicione aqui as demais funções do seu código original (criarCampanha, alterarStatus, exportarExcel, gerarPDFCupons, encerrarCampanhaAtual, etc.)
-        // Como você não forneceu o script completo, copie-as do seu arquivo original.
+        // Demais funções mantidas (alterarStatus, criarCampanha, etc.)
+        async function alterarStatus(id, novoStatus) {
+            const senha = prompt(`Digite a senha master para ${novoStatus.toUpperCase()}:`);
+            if(senha !== MASTER_PASSWORD) return;
+            try {
+                const res = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "atualizarstatuspagamento", idReserva: id, novoStatus: novoStatus, idCampanha: campanhaSelecionadaId })
+                });
+                const json = await res.json();
+                if(json.status === "sucesso") { atualizarListaReservas(); } else { alert("Erro: " + json.message); }
+            } catch(e) { alert("Erro de conexão."); }
+        }
+
+        async function encerrarCampanhaAtual() {
+            const senha = prompt("Digite a senha master para ENCERRAR esta campanha:");
+            if(senha !== MASTER_PASSWORD) return;
+            try {
+                const res = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "encerrarcampanha", id: campanhaSelecionadaId })
+                });
+                const json = await res.json();
+                if(json.status === "sucesso") { alert("Campanha encerrada!"); carregarCampanhas(); }
+            } catch(e) { alert("Erro."); }
+        }
+
+        async function criarCampanha(e) {
+            e.preventDefault();
+            const btn = document.getElementById("btnSalvarCampanha");
+            btn.disabled = true;
+            btn.innerText = "Criando...";
+            const payload = {
+                action: "criarcampanha",
+                nome: document.getElementById("nomeAcao").value,
+                numeroInicial: document.getElementById("numeroInicial").value,
+                quantidadeNumeros: document.getElementById("quantidadeNumeros").value,
+                valorCota: document.getElementById("valorCota").value,
+                descricaoPremios: document.getElementById("descricaoPremios").value,
+                obsCampanha: document.getElementById("obsCampanha").value
+            };
+            try {
+                const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+                const json = await res.json();
+                if(json.status === "sucesso") { alert("Campanha criada!"); document.getElementById("formCriarCampanha").reset(); carregarCampanhas(); }
+            } catch(e) { alert("Erro."); }
+            btn.disabled = false; btn.innerText = "Publicar Ação";
+        }
+
+        function exportarExcel() {
+            if(dadosExportacao.length === 0) { alert("Não há dados para exportar."); return; }
+            const nomeAcao = dadosCampanhaAtual.nome;
+            const ws = XLSX.utils.json_to_sheet(dadosExportacao.map(r => ({
+                "Ação": nomeAcao,
+                "Comprador": r.comprador,
+                "WhatsApp": r.whatsapp,
+                "Números": r.numeros,
+                "Quantidade": r.numeros.split(",").length,
+                "Valor Total": r.total,
+                "Status": r.statusPagamento,
+                "Prêmios": dadosCampanhaAtual.premios,
+                "Obs": dadosCampanhaAtual.obs
+            })));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Base_Completa");
+            XLSX.writeFile(wb, `Base_Campanha_${nomeAcao}.xlsx`);
+        }
+
+        async function gerarPDFCupons() {
+            const btn = document.getElementById("btnPDF");
+            const icon = document.getElementById("pdfIcon");
+            const txt = document.getElementById("pdfTexto");
+            
+            btn.disabled = true;
+            icon.className = "fa-solid fa-spinner loading-spin";
+            txt.innerText = "Iniciando...";
+
+            setTimeout(async () => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+                    const totalNum = parseInt(dadosCampanhaAtual.totalNumeros);
+                    const numInicial = parseInt(dadosCampanhaAtual.numeroInicial);
+                    const nomeAcao = dadosCampanhaAtual.nome;
+                    const valorAcao = parseFloat(dadosCampanhaAtual.valorCota);
+                    const premios = dadosCampanhaAtual.premios;
+                    const obs = dadosCampanhaAtual.obs;
+
+                    let mapaReservas = {};
+                    dadosExportacao.forEach(r => {
+                        r.numeros.split(",").forEach(n => {
+                            mapaReservas[parseInt(n)] = {
+                                nome: r.comprador,
+                                fone: r.whatsapp,
+                                status: r.statusPagamento === "Aprovado" || r.statusPagamento === "PAGO" ? "[X] Pago" : "[X] Reservado"
+                            };
+                        });
+                    });
+
+                    const cupomHeight = 28;
+                    const itemsPerPage = 9;
+
+                    for (let i = 0; i < totalNum; i++) {
+                        const numAtual = numInicial + i;
+                        const info = mapaReservas[numAtual] || { nome: "____________________", fone: "____________________", status: "[ ] Livre" };
+
+                        if (i > 0 && i % itemsPerPage === 0) {
+                            doc.addPage();
+                            txt.innerText = `Pág ${Math.ceil(i/itemsPerPage)}...`;
+                        }
+
+                        const y = 10 + (i % itemsPerPage) * cupomHeight;
+
+                        doc.setDrawColor(200);
+                        doc.rect(10, y, 190, cupomHeight - 2); 
+                        doc.line(100, y, 100, y + cupomHeight - 2); 
+
+                        doc.setFontSize(6);
+                        doc.setFont("helvetica", "bold");
+                        
+                        // VIA 1
+                        doc.text("1ª VIA - CONTROLE", 12, y + 4);
+                        doc.setFont("helvetica", "normal");
+                        doc.text(`${nomeAcao.substring(0, 40)}`, 12, y + 8);
+                        doc.text(`Nº: ${numAtual.toString().padStart(3, '0')} | ${info.status}`, 12, y + 12);
+                        doc.text(`Comprador: ${info.nome.substring(0, 35)}`, 12, y + 16);
+                        doc.text(`Fone: ${info.fone}`, 12, y + 20);
+                        doc.text(`Valor: R$ ${valorAcao.toFixed(2)}`, 12, y + 24);
+
+                        // VIA 2
+                        doc.setFont("helvetica", "bold");
+                        doc.text("2ª VIA - PARCEIRO", 102, y + 4);
+                        doc.setFont("helvetica", "normal");
+                        doc.text(`${nomeAcao.substring(0, 40)}`, 102, y + 8);
+                        doc.text(`Nº: ${numAtual.toString().padStart(3, '0')} | ${info.status}`, 102, y + 12);
+                        doc.text(`Prêmio: ${premios.substring(0, 40)}`, 102, y + 16);
+                        doc.text(`Nome: ${info.nome.substring(0, 35)}`, 102, y + 20);
+                        doc.text(`Valor: R$ ${valorAcao.toFixed(2)}`, 102, y + 24);
+                    }
+
+                    window.open(doc.output('bloburl'), '_blank');
+                    
+                } catch (err) {
+                    alert("Ocorreu um erro técnico. Tente atualizar a página.");
+                } finally {
+                    btn.disabled = false;
+                    icon.className = "fa-solid fa-file-pdf";
+                    txt.innerText = "Cupons PDF";
+                }
+            }, 300);
+        }
     </script>
 </body>
 </html>
