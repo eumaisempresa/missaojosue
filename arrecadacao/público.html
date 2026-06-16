@@ -171,28 +171,40 @@
         let obsCampanha = "";
 
         async function init() {
-            if(!campanhaId) { alert("ID da campanha não encontrado!"); return; }
+            if(!campanhaId) { 
+                document.body.innerHTML = "<div class='flex items-center justify-center min-h-screen'><p class='text-white font-bold'>ERRO: ID da campanha não fornecido na URL.</p></div>";
+                return; 
+            }
             await carregarDadosCampanha();
             await carregarGrid();
         }
 
         async function carregarDadosCampanha() {
             try {
-                const res = await fetch(`${URL_ENDPOINT_PROD}?action=obter_grid&campanhaId=Configuracoes_Gerais`);
+                // Correção: Agora buscamos a lista de campanhas para encontrar os dados da campanha atual
+                const res = await fetch(`${URL_ENDPOINT_PROD}?action=listarcampanhas`);
                 const json = await res.json();
-                const config = json.data.find(c => c.ID_Campanha === campanhaId);
+                
+                // Procuramos a campanha pelo ID que veio na URL
+                const config = json.campanhas.find(c => c.id === campanhaId);
+                
                 if(config) {
-                    nomeCampanha = config.Nome_Acao;
-                    obsCampanha = config.Obs_Campanha || "";
+                    nomeCampanha = config.nome;
+                    obsCampanha = config.obsCampanha || "";
                     document.getElementById("nomeCampanhaTxt").innerText = nomeCampanha;
-                    document.getElementById("badgeCampanha").innerText = config.Status;
-                    document.getElementById("valorCotaTxt").innerText = `R$ ${parseFloat(config.Valor_Cota).toFixed(2)}`;
-                    document.getElementById("premiosTxt").innerText = config.Descricao_Premios;
+                    document.getElementById("badgeCampanha").innerText = config.status;
+                    document.getElementById("valorCotaTxt").innerText = `R$ ${parseFloat(config.valorCota).toFixed(2)}`;
+                    document.getElementById("premiosTxt").innerText = config.descricaoPremios;
                     document.getElementById("obsTxt").innerText = obsCampanha || "Sem promoções ativas.";
                     document.getElementById("obsCheckoutTxt").innerText = obsCampanha;
-                    valorCota = parseFloat(config.Valor_Cota);
+                    valorCota = parseFloat(config.valorCota);
+                } else {
+                    alert("Campanha não encontrada ou expirada.");
                 }
-            } catch(e) { console.error("Erro ao carregar config."); }
+            } catch(e) { 
+                console.error("Erro ao carregar dados da campanha:", e);
+                alert("Erro ao carregar dados da campanha. Verifique sua conexão.");
+            }
         }
 
         async function carregarGrid() {
@@ -202,21 +214,28 @@
                 const res = await fetch(`${URL_ENDPOINT_PROD}?action=obter_grid&campanhaId=${campanhaId}`);
                 const json = await res.json();
                 grid.innerHTML = "";
-                json.data.forEach(item => {
-                    const btn = document.createElement("button");
-                    btn.innerText = item.numero.toString().padStart(3, '0');
-                    
-                    if(item.status === 'DISPONIVEL') {
-                        btn.className = "numero-btn text-sm btn-livre";
-                        btn.onclick = () => alternarSelecao(item.numero, btn);
-                    } else if(item.status === 'RESERVADO') {
-                        btn.className = "numero-btn text-sm btn-reservado";
-                    } else if(item.status === 'PAGO') {
-                        btn.className = "numero-btn text-sm btn-pago";
-                    }
-                    grid.appendChild(btn);
-                });
-            } catch(e) { grid.innerHTML = "<p class='text-red-500 text-xs py-10 text-center col-span-full'>Erro de conexão.</p>"; }
+                
+                if(json.data && Array.isArray(json.data)) {
+                    json.data.forEach(item => {
+                        const btn = document.createElement("button");
+                        btn.innerText = item.numero.toString().padStart(3, '0');
+                        
+                        if(item.status === 'DISPONIVEL') {
+                            btn.className = "numero-btn text-sm btn-livre";
+                            btn.onclick = () => alternarSelecao(item.numero, btn);
+                        } else if(item.status === 'RESERVADO') {
+                            btn.className = "numero-btn text-sm btn-reservado";
+                        } else if(item.status === 'PAGO') {
+                            btn.className = "numero-btn text-sm btn-pago";
+                        }
+                        grid.appendChild(btn);
+                    });
+                } else {
+                    grid.innerHTML = "<p class='text-amber-500 text-xs py-10 text-center col-span-full'>Nenhum número encontrado para esta campanha.</p>";
+                }
+            } catch(e) { 
+                grid.innerHTML = "<p class='text-red-500 text-xs py-10 text-center col-span-full'>Erro de conexão ao carregar os números.</p>"; 
+            }
         }
 
         function alternarSelecao(num, btn) {
