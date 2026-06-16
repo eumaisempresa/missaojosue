@@ -10,105 +10,133 @@
         .brand-purple { color: #8b5cf6; }
         .brand-bg { background-color: #0f172a; }
         .card-bg { background-color: #1e293b; }
+        #loginOverlay {
+            position: fixed;
+            inset: 0;
+            background: #0f172a;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body class="brand-bg text-zinc-100 min-h-screen font-sans pb-10">
 
-    <header class="w-full bg-[#1e293b] border-b border-zinc-800 py-6 px-4 shadow-xl">
-        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="text-center md:text-left">
-                <h1 class="text-2xl font-black uppercase tracking-tighter brand-purple">MISSÃO JOSUÉ <span class="text-white text-sm">| PAINEL ADM</span></h1>
-                <p class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Gestão de Arrecadação Missionária</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <button onclick="abrirModalNovaCampanha()" class="bg-purple-600 hover:bg-purple-500 text-white text-xs font-black px-5 py-3 rounded-xl transition-all shadow-lg shadow-purple-500/20">
-                    <i class="fa-solid fa-plus-circle mr-2"></i> NOVA CAMPANHA
-                </button>
-            </div>
+    <!-- Tela de Login -->
+    <div id="loginOverlay">
+        <div class="card-bg p-8 rounded-3xl border border-zinc-800 w-full max-w-sm shadow-2xl text-center">
+            <h1 class="text-2xl font-black brand-purple mb-6 uppercase tracking-tighter">ACESSO RESTRITO</h1>
+            <input type="password" id="inputSenhaLogin" placeholder="Digite a senha master" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-4 text-white text-center outline-none focus:border-purple-500 transition-all mb-4">
+            <button onclick="verificarLogin()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-black py-4 rounded-2xl transition-all shadow-lg">ENTRAR NO PAINEL</button>
         </div>
-    </header>
+    </div>
 
-    <main class="max-w-5xl mx-auto px-4 py-8 space-y-8">
-        
-        <section class="card-bg border border-zinc-800 rounded-3xl p-6 shadow-2xl">
-            <label class="text-[10px] font-bold text-zinc-500 uppercase mb-2 block">Selecione a Campanha para Gerenciar</label>
-            <select id="selectCampanhas" onchange="selecionarCampanha()" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-4 text-white font-bold outline-none focus:border-purple-500 transition-all">
-                <option value="">Carregando campanhas...</option>
-            </select>
+    <!-- Conteúdo do Painel (escondido até logar) -->
+    <div id="conteudoPainel" class="hidden">
+        <header class="w-full bg-[#1e293b] border-b border-zinc-800 py-6 px-4 shadow-xl">
+            <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="text-center md:text-left">
+                    <h1 class="text-2xl font-black uppercase tracking-tighter brand-purple">MISSÃO JOSUÉ <span class="text-white text-sm">| PAINEL ADM</span></h1>
+                    <p class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Gestão de Arrecadação Missionária</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="abrirModalNovaCampanha()" class="bg-purple-600 hover:bg-purple-500 text-white text-xs font-black px-5 py-3 rounded-xl transition-all shadow-lg shadow-purple-500/20">
+                        <i class="fa-solid fa-plus-circle mr-2"></i> NOVA CAMPANHA
+                    </button>
+                </div>
+            </div>
+        </header>
 
-            <div id="boxLinks" class="mt-6 hidden animate-fade-in">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-black/30 border border-zinc-800 rounded-2xl p-4">
-                        <p class="text-[10px] font-bold text-zinc-500 uppercase mb-2">Link do Site Público:</p>
-                        <div class="flex items-center gap-2">
-                            <input type="text" id="linkPublico" readonly class="flex-1 bg-transparent text-xs text-purple-400 font-mono outline-none">
-                            <button onclick="copiarLink()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-copy"></i></button>
+        <main class="max-w-5xl mx-auto px-4 py-8 space-y-8">
+            
+            <section class="card-bg border border-zinc-800 rounded-3xl p-6 shadow-2xl">
+                <label class="text-[10px] font-bold text-zinc-500 uppercase mb-2 block">Selecione a Campanha para Gerenciar</label>
+                <select id="selectCampanhas" onchange="selecionarCampanha()" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-4 text-white font-bold outline-none focus:border-purple-500 transition-all">
+                    <option value="">Carregando campanhas...</option>
+                </select>
+
+                <div id="boxLinks" class="mt-6 hidden animate-fade-in">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-black/30 border border-zinc-800 rounded-2xl p-4">
+                            <p class="text-[10px] font-bold text-zinc-500 uppercase mb-2">Link do Site Público:</p>
+                            <div class="flex items-center gap-2">
+                                <input type="text" id="linkPublico" readonly class="flex-1 bg-transparent text-xs text-purple-400 font-mono outline-none">
+                                <button onclick="copiarLink()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-copy"></i></button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-end gap-3">
+                            <button onclick="abrirRelatorio()" class="bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold px-4 py-3 rounded-xl transition-all">
+                                <i class="fa-solid fa-chart-pie mr-2"></i> RELATÓRIO VISUAL
+                            </button>
+                            <button onclick="encerrarCampanhaAtual()" class="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold px-4 py-3 rounded-xl border border-red-500/20 transition-all">
+                                <i class="fa-solid fa-power-off mr-2"></i> ENCERRAR
+                            </button>
                         </div>
                     </div>
-                    <div class="flex items-center justify-end gap-3">
-                        <button onclick="abrirRelatorio()" class="bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold px-4 py-3 rounded-xl transition-all">
-                            <i class="fa-solid fa-chart-pie mr-2"></i> RELATÓRIO VISUAL
+                </div>
+            </section>
+
+            <section id="sectionKPIs" class="grid grid-cols-2 md:grid-cols-4 gap-4 hidden">
+                <div class="card-bg border border-zinc-800 rounded-3xl p-6 text-center">
+                    <p class="text-[10px] font-bold text-zinc-500 uppercase mb-1">Total</p>
+                    <p class="text-3xl font-black text-white" id="kpiTotal">0</p>
+                </div>
+                <div class="card-bg border border-zinc-800 rounded-3xl p-6 text-center border-amber-500/20">
+                    <p class="text-[10px] font-bold text-amber-500 uppercase mb-1">Reservados</p>
+                    <p class="text-3xl font-black text-amber-500" id="kpiReservas">0</p>
+                </div>
+                <div class="card-bg border border-zinc-800 rounded-3xl p-6 text-center border-emerald-500/20">
+                    <p class="text-[10px] font-bold text-emerald-500 uppercase mb-1">Pagos</p>
+                    <p class="text-3xl font-black text-emerald-500" id="kpiPagos">0</p>
+                </div>
+                <div class="card-bg border border-zinc-800 rounded-3xl p-6 text-center">
+                    <p class="text-[10px] font-bold text-zinc-500 uppercase mb-1">Vagos</p>
+                    <p class="text-3xl font-black text-zinc-400" id="kpiVagos">0</p>
+                </div>
+            </section>
+
+            <section id="sectionReservas" class="hidden space-y-4">
+                <div class="flex justify-between items-center px-2">
+                    <h3 class="text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                        <i class="fa-solid fa-list-check brand-purple"></i> Lista de Pagantes e Reservas
+                    </h3>
+                    <div class="flex gap-2">
+                        <button onclick="baixarExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black px-4 py-2 rounded-lg transition-all">
+                            <i class="fa-solid fa-file-excel mr-1"></i> BAIXAR EXCEL
                         </button>
-                        <button onclick="encerrarCampanhaAtual()" class="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold px-4 py-3 rounded-xl border border-red-500/20 transition-all">
-                            <i class="fa-solid fa-power-off mr-2"></i> ENCERRAR
-                        </button>
+                        <span id="contadorReservas" class="bg-zinc-800 text-zinc-400 text-[10px] font-bold px-3 py-2 rounded-lg">0 Transações</span>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <section id="sectionKPIs" class="grid grid-cols-2 md:grid-cols-4 gap-4 hidden">
-            <div class="card-bg border border-zinc-800 rounded-3xl p-6 text-center">
-                <p class="text-[10px] font-bold text-zinc-500 uppercase mb-1">Total</p>
-                <p class="text-3xl font-black text-white" id="kpiTotal">0</p>
-            </div>
-            <div class="card-bg border border-zinc-800 rounded-3xl p-6 text-center border-amber-500/20">
-                <p class="text-[10px] font-bold text-amber-500 uppercase mb-1">Reservados</p>
-                <p class="text-3xl font-black text-amber-500" id="kpiReservas">0</p>
-            </div>
-            <div class="card-bg border border-zinc-800 rounded-3xl p-6 text-center border-emerald-500/20">
-                <p class="text-[10px] font-bold text-emerald-500 uppercase mb-1">Pagos</p>
-                <p class="text-3xl font-black text-emerald-500" id="kpiPagos">0</p>
-            </div>
-            <div class="card-bg border border-zinc-800 rounded-3xl p-6 text-center">
-                <p class="text-[10px] font-bold text-zinc-500 uppercase mb-1">Vagos</p>
-                <p class="text-3xl font-black text-zinc-400" id="kpiVagos">0</p>
-            </div>
-        </section>
-
-        <section id="sectionReservas" class="hidden space-y-4">
-            <div class="flex justify-between items-center px-2">
-                <h3 class="text-lg font-black uppercase tracking-tight flex items-center gap-2">
-                    <i class="fa-solid fa-list-check brand-purple"></i> Lista de Pagantes e Reservas
-                </h3>
-                <div class="flex gap-2">
-                    <button onclick="baixarExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black px-4 py-2 rounded-lg transition-all">
-                        <i class="fa-solid fa-file-excel mr-1"></i> BAIXAR EXCEL
-                    </button>
-                    <span id="contadorReservas" class="bg-zinc-800 text-zinc-400 text-[10px] font-bold px-3 py-2 rounded-lg">0 Transações</span>
+                <div class="overflow-hidden card-bg border border-zinc-800 rounded-3xl shadow-2xl">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm border-collapse">
+                            <thead>
+                                <tr class="bg-zinc-950/50 border-b border-zinc-800 text-zinc-500 text-[10px] font-black uppercase tracking-widest">
+                                    <th class="p-4">Comprador</th>
+                                    <th class="p-4">Números</th>
+                                    <th class="p-4">Valor</th>
+                                    <th class="p-4 text-center">Status</th>
+                                    <th class="p-4 text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaReservas" class="divide-y divide-zinc-800/50">
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="overflow-hidden card-bg border border-zinc-800 rounded-3xl shadow-2xl">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm border-collapse">
-                        <thead>
-                            <tr class="bg-zinc-950/50 border-b border-zinc-800 text-zinc-500 text-[10px] font-black uppercase tracking-widest">
-                                <th class="p-4">Comprador</th>
-                                <th class="p-4">Números</th>
-                                <th class="p-4">Valor</th>
-                                <th class="p-4 text-center">Status</th>
-                                <th class="p-4 text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaReservas" class="divide-y divide-zinc-800/50">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+        </main>
 
-    </main>
+        <footer class="max-w-5xl mx-auto px-4 py-10 border-t border-zinc-800 text-center">
+            <a href="https://eumaisempresa.github.io/eumaismissao/" target="_blank" class="text-xs font-bold text-zinc-500 hover:text-white transition-colors uppercase tracking-widest">
+                Desenvolvido pelo <span class="text-white">Grupo EU<sup>+</sup></span> <span class="text-emerald-500">Missão</span> 🛡️
+            </a>
+            <p class="text-[9px] text-zinc-700 mt-2">© 2026 MISSÃO JOSUÉ - GESTÃO DE ARRECADAÇÃO</p>
+        </footer>
+    </div>
 
     <div id="modalNovaCampanha" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden items-center justify-center p-4">
         <div class="card-bg border border-zinc-800 rounded-[2.5rem] p-8 max-w-2xl w-full shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
@@ -214,6 +242,17 @@
         let campanhaSelecionadaId = "";
         let dadosCampanhaAtual = null;
 
+        function verificarLogin() {
+            const senha = document.getElementById("inputSenhaLogin").value;
+            if(senha === MASTER_PASSWORD) {
+                document.getElementById("loginOverlay").classList.add("hidden");
+                document.getElementById("conteudoPainel").classList.remove("hidden");
+                init();
+            } else {
+                alert("Senha incorreta!");
+            }
+        }
+
         async function init() { await carregarCampanhas(); }
 
         async function carregarCampanhas() {
@@ -273,9 +312,9 @@
                             <td class="p-4 font-bold">R$ ${r.total.toFixed(2)}</td>
                             <td class="p-4 text-center"><span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase ${statusClass}">${r.statusPagamento}</span></td>
                             <td class="p-4 text-right flex justify-end gap-2">
-                                ${!isAprovado ? `<a href="${linkZap}" target="_blank" class="text-zinc-400 hover:text-white p-2"><i class="fa-solid fa-bell"></i></a>` : ''}
-                                <button onclick="alterarStatus('${r.idReserva}', '${isAprovado ? 'Pendente' : 'Aprovado'}')" class="${isAprovado ? 'text-zinc-500 hover:text-white' : 'text-emerald-500 hover:text-emerald-400'} p-2"><i class="fa-solid ${isAprovado ? 'fa-undo' : 'fa-check-double'}"></i></button>
-                                <button onclick="alterarStatus('${r.idReserva}', 'Cancelar')" class="text-red-500/50 hover:text-red-500 p-2"><i class="fa-solid fa-trash-can"></i></button>
+                                ${!isAprovado ? \`<a href="\${linkZap}" target="_blank" class="text-zinc-400 hover:text-white p-2"><i class="fa-solid fa-bell"></i></a>\` : ''}
+                                <button onclick="alterarStatus('\${r.idReserva}', '\${isAprovado ? 'Pendente' : 'Aprovado'}')" class="\${isAprovado ? 'text-zinc-500 hover:text-white' : 'text-emerald-500 hover:text-emerald-400'} p-2"><i class="fa-solid \${isAprovado ? 'fa-undo' : 'fa-check-double'}"></i></button>
+                                <button onclick="alterarStatus('\${r.idReserva}', 'Cancelar')" class="text-red-500/50 hover:text-red-500 p-2"><i class="fa-solid fa-trash-can"></i></button>
                             </td>
                         </tr>
                     `;
@@ -301,8 +340,8 @@
 
         async function alterarStatus(idReserva, novoStatus) {
             const acao = novoStatus === "Cancelar" ? "CANCELAR" : (novoStatus === "Aprovado" ? "APROVAR" : "REVERTER");
-            if(!confirm(`Deseja ${acao} esta transação?`)) return;
-            const senha = prompt(`Digite a senha master para ${acao}:`);
+            if(!confirm(`Deseja \${acao} esta transação?`)) return;
+            const senha = prompt(`Digite a senha master para \${acao}:`);
             if(senha !== MASTER_PASSWORD) { alert("Senha incorreta!"); return; }
             try {
                 const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "atualizarstatuspagamento", idReserva: idReserva, idCampanha: campanhaSelecionadaId, novoStatus: novoStatus }) });
@@ -341,8 +380,9 @@
         function abrirRelatorio() { document.getElementById("modalRelatorio").classList.remove("hidden"); document.getElementById("modalRelatorio").classList.add("flex"); }
         function fecharRelatorio() { document.getElementById("modalRelatorio").classList.add("hidden"); document.getElementById("modalRelatorio").classList.remove("flex"); }
         function copiarLink() { const link = document.getElementById("linkPublico"); link.select(); navigator.clipboard.writeText(link.value); alert("Link copiado!"); }
-        function baixarExcel() { const table = document.getElementById("tabelaReservas"); const wb = XLSX.utils.table_to_book(table, {sheet: "Reservas"}); XLSX.writeFile(wb, `Reservas_${dadosCampanhaAtual.nome}.xlsx`); }
-        init();
+        function baixarExcel() { const table = document.getElementById("tabelaReservas"); const wb = XLSX.utils.table_to_book(table, {sheet: "Reservas"}); XLSX.writeFile(wb, \`Reservas_\${dadosCampanhaAtual.nome}.xlsx\`); }
+        
+        // init removido daqui para ser chamado após o login
     </script>
 </body>
 </html>
