@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel ADM - Missão Josué</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .brand-purple { color: #8b5cf6; }
+        .brand-bg { background-color: #0f172a; }
+        .card-bg { background-color: #1e293b; }
+    </style>
+</head>
+<body class="brand-bg text-zinc-100 min-h-screen font-sans pb-10">
+
+    <header class="w-full bg-[#1e293b] border-b border-zinc-800 py-6 px-4 shadow-xl">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-center md:text-left">
+                <h1 class="text-2xl font-black uppercase tracking-tighter brand-purple">MISSÃO JOSUÉ <span class="text-white text-sm">| PAINEL ADM</span></h1>
+                <p class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Gestão de Arrecadação Missionária</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="abrirModalNovaCampanha()" class="bg-purple-600 hover:bg-purple-500 text-white text-xs font-black px-5 py-3 rounded-xl transition-all shadow-lg shadow-purple-500/20">
+                    <i class="fa-solid fa-plus-circle mr-2"></i> NOVA CAMPANHA
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        
+        <section class="card-bg border border-zinc-800 rounded-3xl p-6 shadow-2xl">
+            <label class="text-[10px] font-bold text-zinc-500 uppercase mb-2 block">Selecione a Campanha para Gerenciar</label>
+            <select id="selectCampanhas" onchange="selecionarCampanha()" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-4 text-white font-bold outline-none focus:border-purple-500 transition-all">
+                <option value="">Carregando campanhas...</option>
+            </select>
+
+            <div id="boxLinks" class="mt-6 hidden animate-fade-in">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-black/30 border border-zinc-800 rounded-2xl p-4">
+                        <p class="text-[10px] font-bold text-zinc-500 uppercase mb-2">Link do Site Público:</p>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="linkPublico" readonly class="flex-1 bg-transparent text-xs text-purple-400 font-mono outline-none">
+                            <button onclick="copiarLink()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-copy"></i></button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-end gap-3">
+                        <button onclick="abrirRelatorio()" class="bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold px-4 py-3 rounded-xl transition-all">
+                            <i class="fa-solid fa-chart-pie mr-2"></i> RELATÓRIO VISUAL
+                        </button>
+                        <button onclick="encerrarCampanhaAtual()" class="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-bold px-4 py-3 rounded-xl border border-red-500/20 transition-all">
+                            <i class="fa-solid fa-power-off mr-2"></i> ENCERRAR
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sectionKPIs" class="grid grid-cols-2 md:grid-cols-4 gap-4 hidden">
+            <div class="card-bg border border-zinc-800 rounded-3xl p-6 text-center">
+                <p class="text-[10px] font-bold text-zinc-500 uppercase mb-1">Total</p>
+                <p class="text-3xl font-black text-white" id="kpiTotal">0</p>
+            </div>
+            <div class="card-bg border border-zinc-800 rounded-3xl p-6 text-center border-amber-500/20">
+                <p class="text-[10px] font-bold text-amber-500 uppercase mb-1">Reservados</p>
+                <p class="text-3xl font-black text-amber-500" id="kpiReservas">0</p>
+            </div>
+            <div class="card-bg border border-zinc-800 rounded-3xl p-6 text-center border-emerald-500/20">
+                <p class="text-[10px] font-bold text-emerald-500 uppercase mb-1">Pagos</p>
+                <p class="text-3xl font-black text-emerald-500" id="kpiPagos">0</p>
+            </div>
+            <div class="card-bg border border-zinc-800 rounded-3xl p-6 text-center">
+                <p class="text-[10px] font-bold text-zinc-500 uppercase mb-1">Vagos</p>
+                <p class="text-3xl font-black text-zinc-400" id="kpiVagos">0</p>
+            </div>
+        </section>
+
+        <section id="sectionReservas" class="hidden space-y-4">
+            <div class="flex justify-between items-center px-2">
+                <h3 class="text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                    <i class="fa-solid fa-list-check brand-purple"></i> Lista de Pagantes e Reservas
+                </h3>
+                <div class="flex gap-2">
+                    <button onclick="baixarExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black px-4 py-2 rounded-lg transition-all">
+                        <i class="fa-solid fa-file-excel mr-1"></i> BAIXAR EXCEL
+                    </button>
+                    <span id="contadorReservas" class="bg-zinc-800 text-zinc-400 text-[10px] font-bold px-3 py-2 rounded-lg">0 Transações</span>
+                </div>
+            </div>
+
+            <div class="overflow-hidden card-bg border border-zinc-800 rounded-3xl shadow-2xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-zinc-950/50 border-b border-zinc-800 text-zinc-500 text-[10px] font-black uppercase tracking-widest">
+                                <th class="p-4">Comprador</th>
+                                <th class="p-4">Números</th>
+                                <th class="p-4">Valor</th>
+                                <th class="p-4 text-center">Status</th>
+                                <th class="p-4 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaReservas" class="divide-y divide-zinc-800/50">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="modalNovaCampanha" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+        <div class="card-bg border border-zinc-800 rounded-[2.5rem] p-8 max-w-2xl w-full shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-black text-white uppercase tracking-tighter">Criar Nova Ação</h2>
+                <button onclick="fecharModalNovaCampanha()" class="text-zinc-500 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            
+            <form id="formNovaCampanha" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                    <label class="text-[10px] font-bold text-zinc-500 uppercase ml-2 mb-1 block">Nome da Ação Missionária</label>
+                    <input type="text" name="nome" placeholder="Ex: Rifa de Natal - Missão Josué" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-4 text-white outline-none focus:border-purple-500 transition-all" required>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-zinc-500 uppercase ml-2 mb-1 block">Total de Números</label>
+                    <select name="totalNumeros" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-4 text-white outline-none focus:border-purple-500 transition-all">
+                        <option value="50">50 números</option>
+                        <option value="100">100 números</option>
+                        <option value="200">200 números</option>
+                        <option value="500">500 números</option>
+                        <option value="1000">1000 números</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-zinc-500 uppercase ml-2 mb-1 block">Número Inicial</label>
+                    <input type="number" name="numeroInicial" value="1" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-4 text-white outline-none focus:border-purple-500 transition-all">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-zinc-500 uppercase ml-2 mb-1 block">Valor por Cota (R$)</label>
+                    <input type="number" step="0.01" name="valorCota" placeholder="0.00" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-4 text-white outline-none focus:border-purple-500 transition-all" required>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="text-[10px] font-bold text-zinc-500 uppercase ml-2 mb-1 block">Descrição dos Prêmios</label>
+                    <textarea name="descricaoPremios" placeholder="1º Prêmio: ...&#10;2º Prêmio: ..." class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-4 text-white outline-none focus:border-purple-500 transition-all h-24" required></textarea>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="text-[10px] font-bold text-zinc-500 uppercase ml-2 mb-1 block">Observações / Promoções</label>
+                    <textarea name="obsCampanha" placeholder="Ex: 1 por R$10, 3 por R$25" class="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-4 text-white outline-none focus:border-purple-500 transition-all h-20"></textarea>
+                </div>
+                <div class="md:col-span-2 pt-4">
+                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-black py-5 rounded-2xl transition-all shadow-xl shadow-purple-500/20 uppercase tracking-widest">
+                        LANÇAR CAMPANHA AGORA
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalRelatorio" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[100] hidden flex-col items-center p-4 overflow-y-auto">
+        <div class="w-full max-w-4xl bg-white text-zinc-900 rounded-[2.5rem] p-8 md:p-12 shadow-2xl my-8 relative">
+            <button onclick="fecharRelatorio()" class="absolute top-6 right-6 text-zinc-400 hover:text-zinc-900 print:hidden"><i class="fa-solid fa-times-circle text-3xl"></i></button>
+            <div id="printArea">
+                <div class="text-center border-b-2 border-zinc-100 pb-8 mb-8">
+                    <h2 class="text-4xl font-black uppercase tracking-tighter mb-2">Relatório de Performance</h2>
+                    <p id="relatorioNomeAcao" class="text-2xl font-bold brand-purple uppercase">---</p>
+                    <p class="text-zinc-400 text-[10px] font-bold uppercase tracking-widest mt-2">MISSÃO JOSUÉ | Grupo EU+ Missão</p>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+                    <div class="bg-zinc-50 rounded-3xl p-6 text-center border border-zinc-100">
+                        <p class="text-[9px] font-bold text-zinc-400 uppercase mb-1">Total</p>
+                        <p id="relKpiTotal" class="text-3xl font-black text-zinc-900">0</p>
+                    </div>
+                    <div class="bg-amber-50 rounded-3xl p-6 text-center border border-amber-100">
+                        <p class="text-[9px] font-bold text-amber-600 uppercase mb-1">Reservados</p>
+                        <p id="relKpiReservas" class="text-3xl font-black text-amber-600">0</p>
+                    </div>
+                    <div class="bg-emerald-50 rounded-3xl p-6 text-center border border-emerald-100">
+                        <p class="text-[9px] font-bold text-emerald-600 uppercase mb-1">Pagos</p>
+                        <p id="relKpiPagos" class="text-3xl font-black text-emerald-600">0</p>
+                    </div>
+                    <div class="bg-zinc-50 rounded-3xl p-6 text-center border border-zinc-100">
+                        <p class="text-[9px] font-bold text-zinc-400 uppercase mb-1">Vagos</p>
+                        <p id="relKpiVagos" class="text-3xl font-black text-zinc-400">0</p>
+                    </div>
+                </div>
+                <div class="space-y-8">
+                    <div class="bg-zinc-50 rounded-3xl p-8 border border-zinc-100">
+                        <h4 class="text-xs font-black uppercase tracking-widest text-zinc-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-gift brand-purple"></i> Detalhes da Ação</h4>
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div><p class="text-[9px] font-bold text-zinc-400 uppercase mb-2">Prêmios</p><p id="relDescPremios" class="text-sm font-bold text-zinc-800 whitespace-pre-line">---</p></div>
+                            <div><p class="text-[9px] font-bold text-zinc-400 uppercase mb-2">Observações</p><p id="relObs" class="text-sm text-zinc-600 whitespace-pre-line">---</p></div>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100"><p class="text-[10px] font-black text-emerald-600 uppercase mb-2">Números Pagos</p><p id="relListaPagos" class="text-xs font-mono text-emerald-800 leading-relaxed">---</p></div>
+                        <div class="bg-amber-50/50 p-6 rounded-2xl border border-amber-100"><p class="text-[10px] font-black text-amber-600 uppercase mb-2">Números Reservados</p><p id="relListaReservados" class="text-xs font-mono text-amber-800 leading-relaxed">---</p></div>
+                        <div class="bg-zinc-50 p-6 rounded-2xl border border-zinc-100"><p class="text-[10px] font-black text-zinc-400 uppercase mb-2">Números Vagos</p><p id="relListaVagos" class="text-[10px] font-mono text-zinc-500 leading-relaxed">---</p></div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-12 flex justify-center print:hidden">
+                <button onclick="window.print()" class="bg-zinc-900 text-white font-black px-10 py-4 rounded-2xl shadow-xl hover:scale-105 transition-all"><i class="fa-solid fa-print mr-2"></i> IMPRIMIR RELATÓRIO</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbzKJsyx5WJtfTks1c-RbFU5i5KVXwv-k9ouBNIH0u-x8D_zHvqcDxIWss-AQ-svjij_/exec";
+        const MASTER_PASSWORD = "Josue123"; 
+        
+        let campanhas = [];
+        let campanhaSelecionadaId = "";
+        let dadosCampanhaAtual = null;
+
+        async function init() { await carregarCampanhas(); }
+
+        async function carregarCampanhas() {
+            try {
+                const res = await fetch(`${API_URL}?action=listarcampanhas`);
+                const json = await res.json();
+                campanhas = json.campanhas || [];
+                const select = document.getElementById("selectCampanhas");
+                select.innerHTML = '<option value="">Escolha uma campanha...</option>';
+                campanhas.forEach(c => {
+                    const opt = document.createElement("option");
+                    opt.value = c.id;
+                    opt.innerText = `${c.nome} (${c.totalNumeros} nºs - R$ ${c.valorCota.toFixed(2)}) - [${c.status}]`;
+                    select.appendChild(opt);
+                });
+            } catch(e) { console.error("Erro ao carregar campanhas."); }
+        }
+
+        async function selecionarCampanha() {
+            campanhaSelecionadaId = document.getElementById("selectCampanhas").value;
+            if(!campanhaSelecionadaId) {
+                document.getElementById("boxLinks").classList.add("hidden");
+                document.getElementById("sectionKPIs").classList.add("hidden");
+                document.getElementById("sectionReservas").classList.add("hidden");
+                return;
+            }
+            dadosCampanhaAtual = campanhas.find(c => c.id === campanhaSelecionadaId);
+            const linkBase = "https://eumaisempresa.github.io/missaojosue/arrecadacao/publico.html";
+            document.getElementById("linkPublico").value = `${linkBase}?id=${campanhaSelecionadaId}`;
+            document.getElementById("boxLinks").classList.remove("hidden");
+            document.getElementById("sectionKPIs").classList.remove("hidden");
+            document.getElementById("sectionReservas").classList.remove("hidden");
+            await atualizarDadosCampanha();
+        }
+
+        async function atualizarDadosCampanha() {
+            try {
+                const res = await fetch(`${API_URL}?action=listarreservas&id=${campanhaSelecionadaId}`);
+                const json = await res.json();
+                const tabela = document.getElementById("tabelaReservas");
+                tabela.innerHTML = "";
+                let pagos = 0, reservas = 0, listaPagos = [], listaReservados = [];
+
+                json.reservas.forEach(r => {
+                    const isAprovado = r.statusPagamento === "Aprovado";
+                    if(isAprovado) { pagos += r.numeros.split(", ").length; listaPagos.push(r.numeros); }
+                    else { reservas += r.numeros.split(", ").length; listaReservados.push(r.numeros); }
+
+                    const statusClass = isAprovado ? "text-emerald-500 bg-emerald-500/10" : "text-amber-500 bg-amber-500/10";
+                    const msgLembrete = `Olá ${r.comprador}, aqui é da Missão Josué. Vimos que você reservou as cotas [ ${r.numeros} ], mas o comprovante Pix ainda não chegou. Pode nos enviar por aqui para validarmos? Obrigado!`;
+                    const linkZap = `https://api.whatsapp.com/send?phone=${r.whatsapp}&text=${encodeURIComponent(msgLembrete)}`;
+
+                    tabela.innerHTML += `
+                        <tr class="hover:bg-zinc-800/30">
+                            <td class="p-4 font-bold text-white">${r.comprador}<br><span class="text-[10px] text-zinc-500">${r.whatsapp}</span></td>
+                            <td class="p-4 font-mono text-xs text-purple-400">${r.numeros}</td>
+                            <td class="p-4 font-bold">R$ ${r.total.toFixed(2)}</td>
+                            <td class="p-4 text-center"><span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase ${statusClass}">${r.statusPagamento}</span></td>
+                            <td class="p-4 text-right flex justify-end gap-2">
+                                ${!isAprovado ? `<a href="${linkZap}" target="_blank" class="text-zinc-400 hover:text-white p-2"><i class="fa-solid fa-bell"></i></a>` : ''}
+                                <button onclick="alterarStatus('${r.idReserva}', '${isAprovado ? 'Pendente' : 'Aprovado'}')" class="${isAprovado ? 'text-zinc-500 hover:text-white' : 'text-emerald-500 hover:text-emerald-400'} p-2"><i class="fa-solid ${isAprovado ? 'fa-undo' : 'fa-check-double'}"></i></button>
+                                <button onclick="alterarStatus('${r.idReserva}', 'Cancelar')" class="text-red-500/50 hover:text-red-500 p-2"><i class="fa-solid fa-trash-can"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                const totalNum = parseInt(dadosCampanhaAtual.totalNumeros);
+                document.getElementById("kpiTotal").innerText = totalNum;
+                document.getElementById("kpiReservas").innerText = reservas;
+                document.getElementById("kpiPagos").innerText = pagos;
+                document.getElementById("kpiVagos").innerText = totalNum - pagos - reservas;
+                document.getElementById("contadorReservas").innerText = `${json.reservas.length} Transações`;
+                document.getElementById("relatorioNomeAcao").innerText = dadosCampanhaAtual.nome;
+                document.getElementById("relKpiTotal").innerText = totalNum;
+                document.getElementById("relKpiReservas").innerText = reservas;
+                document.getElementById("relKpiPagos").innerText = pagos;
+                document.getElementById("relKpiVagos").innerText = totalNum - pagos - reservas;
+                document.getElementById("relDescPremios").innerText = dadosCampanhaAtual.descricaoPremios || "---";
+                document.getElementById("relObs").innerText = dadosCampanhaAtual.obsCampanha || "---";
+                document.getElementById("relListaPagos").innerText = listaPagos.join(", ") || "Nenhum número pago ainda.";
+                document.getElementById("relListaReservados").innerText = listaReservados.join(", ") || "Nenhuma reserva pendente.";
+            } catch(e) { console.error("Erro ao atualizar dados."); }
+        }
+
+        async function alterarStatus(idReserva, novoStatus) {
+            const acao = novoStatus === "Cancelar" ? "CANCELAR" : (novoStatus === "Aprovado" ? "APROVAR" : "REVERTER");
+            if(!confirm(`Deseja ${acao} esta transação?`)) return;
+            const senha = prompt(`Digite a senha master para ${acao}:`);
+            if(senha !== MASTER_PASSWORD) { alert("Senha incorreta!"); return; }
+            try {
+                const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "atualizarstatuspagamento", idReserva: idReserva, idCampanha: campanhaSelecionadaId, novoStatus: novoStatus }) });
+                const json = await res.json();
+                if(json.status === "sucesso") { alert("Status atualizado!"); await atualizarDadosCampanha(); }
+            } catch(e) { alert("Erro de conexão."); }
+        }
+
+        async function encerrarCampanhaAtual() {
+            const senha = prompt("Digite a senha master para ENCERRAR esta campanha:");
+            if(senha !== MASTER_PASSWORD) return;
+            try {
+                const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "encerrarcampanha", id: campanhaSelecionadaId }) });
+                const json = await res.json();
+                if(json.status === "sucesso") { alert("Campanha encerrada!"); await carregarCampanhas(); selecionarCampanha(); }
+            } catch(e) { alert("Erro."); }
+        }
+
+        function abrirModalNovaCampanha() { document.getElementById("modalNovaCampanha").classList.remove("hidden"); document.getElementById("modalNovaCampanha").classList.add("flex"); }
+        function fecharModalNovaCampanha() { document.getElementById("modalNovaCampanha").classList.add("hidden"); document.getElementById("modalNovaCampanha").classList.remove("flex"); }
+        
+        document.getElementById("formNovaCampanha").onsubmit = async (e) => {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target).entries());
+            data.action = "criarcampanha";
+            const btn = e.target.querySelector('button');
+            btn.disabled = true; btn.innerText = "CRIANDO...";
+            try {
+                const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(data) });
+                const json = await res.json();
+                if(json.status === "sucesso") { alert("Campanha criada!"); fecharModalNovaCampanha(); await carregarCampanhas(); }
+            } catch(e) { alert("Erro ao criar."); }
+            btn.disabled = false; btn.innerText = "LANÇAR CAMPANHA AGORA";
+        };
+
+        function abrirRelatorio() { document.getElementById("modalRelatorio").classList.remove("hidden"); document.getElementById("modalRelatorio").classList.add("flex"); }
+        function fecharRelatorio() { document.getElementById("modalRelatorio").classList.add("hidden"); document.getElementById("modalRelatorio").classList.remove("flex"); }
+        function copiarLink() { const link = document.getElementById("linkPublico"); link.select(); navigator.clipboard.writeText(link.value); alert("Link copiado!"); }
+        function baixarExcel() { const table = document.getElementById("tabelaReservas"); const wb = XLSX.utils.table_to_book(table, {sheet: "Reservas"}); XLSX.writeFile(wb, `Reservas_${dadosCampanhaAtual.nome}.xlsx`); }
+        init();
+    </script>
+</body>
+</html>
