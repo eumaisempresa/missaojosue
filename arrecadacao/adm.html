@@ -312,9 +312,9 @@
                             <td class="p-4 font-bold">R$ ${r.total.toFixed(2)}</td>
                             <td class="p-4 text-center"><span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase ${statusClass}">${r.statusPagamento}</span></td>
                             <td class="p-4 text-right flex justify-end gap-2">
-                                ${!isAprovado ? \`<a href="\${linkZap}" target="_blank" class="text-zinc-400 hover:text-white p-2"><i class="fa-solid fa-bell"></i></a>\` : ''}
-                                <button onclick="alterarStatus('\${r.idReserva}', '\${isAprovado ? 'Pendente' : 'Aprovado'}')" class="\${isAprovado ? 'text-zinc-500 hover:text-white' : 'text-emerald-500 hover:text-emerald-400'} p-2"><i class="fa-solid \${isAprovado ? 'fa-undo' : 'fa-check-double'}"></i></button>
-                                <button onclick="alterarStatus('\${r.idReserva}', 'Cancelar')" class="text-red-500/50 hover:text-red-500 p-2"><i class="fa-solid fa-trash-can"></i></button>
+                                ${!isAprovado ? `<a href="${linkZap}" target="_blank" class="text-zinc-400 hover:text-white p-2"><i class="fa-solid fa-bell"></i></a>` : ''}
+                                <button onclick="alterarStatus('${r.idReserva}', '${isAprovado ? 'Pendente' : 'Aprovado'}')" class="${isAprovado ? 'text-zinc-500 hover:text-white' : 'text-emerald-500 hover:text-emerald-400'} p-2"><i class="fa-solid ${isAprovado ? 'fa-undo' : 'fa-check-double'}"></i></button>
+                                <button onclick="alterarStatus('${r.idReserva}', 'Cancelar')" class="text-red-500/50 hover:text-red-500 p-2"><i class="fa-solid fa-trash-can"></i></button>
                             </td>
                         </tr>
                     `;
@@ -340,8 +340,8 @@
 
         async function alterarStatus(idReserva, novoStatus) {
             const acao = novoStatus === "Cancelar" ? "CANCELAR" : (novoStatus === "Aprovado" ? "APROVAR" : "REVERTER");
-            if(!confirm(`Deseja \${acao} esta transação?`)) return;
-            const senha = prompt(`Digite a senha master para \${acao}:`);
+            if(!confirm(`Deseja ${acao} esta transação?`)) return;
+            const senha = prompt(`Digite a senha master para ${acao}:`);
             if(senha !== MASTER_PASSWORD) { alert("Senha incorreta!"); return; }
             try {
                 const res = await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "atualizarstatuspagamento", idReserva: idReserva, idCampanha: campanhaSelecionadaId, novoStatus: novoStatus }) });
@@ -380,7 +380,7 @@
         function abrirRelatorio() { document.getElementById("modalRelatorio").classList.remove("hidden"); document.getElementById("modalRelatorio").classList.add("flex"); }
         function fecharRelatorio() { document.getElementById("modalRelatorio").classList.add("hidden"); document.getElementById("modalRelatorio").classList.remove("flex"); }
         function copiarLink() { const link = document.getElementById("linkPublico"); link.select(); navigator.clipboard.writeText(link.value); alert("Link copiado!"); }
-        function baixarExcel() { const table = document.getElementById("tabelaReservas"); const wb = XLSX.utils.table_to_book(table, {sheet: "Reservas"}); XLSX.writeFile(wb, \`Reservas_\${dadosCampanhaAtual.nome}.xlsx\`); }
+        function baixarExcel() { const table = document.getElementById("tabelaReservas"); const wb = XLSX.utils.table_to_book(table, {sheet: "Reservas"}); XLSX.writeFile(wb, `Reservas_${dadosCampanhaAtual.nome}.xlsx`); }
         
         // init removido daqui para ser chamado após o login
     </script>
